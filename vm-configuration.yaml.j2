@@ -1,0 +1,99 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: "{{ item }}"
+    flavor.template.kubevirt.io/large: "true"
+    os.template.kubevirt.io/rhel8.5: "true"
+    vm.kubevirt.io/template: rhel8-server-large
+    vm.kubevirt.io/template.namespace: openshift
+    vm.kubevirt.io/template.revision: "1"
+    vm.kubevirt.io/template.version: v0.19.4
+    workload.template.kubevirt.io/server: "true"
+  name: "{{ item }}"
+  namespace: "{{ namespace }}"
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      name: "{{ item }}-rootdisk-tk882"
+    spec:
+      source:
+        pvc:
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
+        storageClassName: ocs-external-storagecluster-ceph-rbd
+  running: true
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: large
+        vm.kubevirt.io/os: rhel8
+        vm.kubevirt.io/workload: server
+      labels:
+        flavor.template.kubevirt.io/large: "true"
+        kubevirt.io/domain: "{{ item }}"
+        kubevirt.io/size: large
+        os.template.kubevirt.io/rhel8.5: "true"
+        vm.kubevirt.io/name: "{{ item }}"
+        workload.template.kubevirt.io/server: "true"
+    spec:
+      domain:
+        cpu:
+          cores: 1
+          sockets: 2
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          - bootOrder: 1
+            disk:
+              bus: virtio
+            name: rootdisk
+          interfaces:
+          - name: default
+            masquerade: {}
+            model: virtio
+          networkInterfaceMultiqueue: true
+        resources:
+          requests:
+            memory: 8Gi
+      evictionStrategy: LiveMigrate
+      hostname: "{{ item }}"
+      networks:
+      - name: default
+        pod: {}
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            user: cloud-user
+            password: 'xxxx'
+            chpasswd:
+              expire: false
+            ssh_authorized_keys:
+              - >-
+                ssh-rsa
+                AAAAB3NzaC1yc2E...
+            hostname: "{{ item }}"
+            bootcmd:
+              - subscription-manager register --username=xxxx --password=xxxx
+            packages:
+             - httpd
+             - python3
+            runcmd:
+              - [ systemctl, daemon-reload ]
+              - [ systemctl, enable, httpd.service ]
+              - [ systemctl, start, httpd.service ]
+        name: cloudinitdisk
+      - dataVolume:
+          name: "{{ item }}-rootdisk-tk882"
+        name: rootdisk
