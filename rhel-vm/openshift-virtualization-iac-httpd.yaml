@@ -5,45 +5,45 @@
   connection: local
   vars:
     vm_names:
-    - app-server-1
-    - app-server-2
-    - app-server-3
-    namespace: "test-vms"
-  tasks: 
+      - app-server-1
+      - app-server-2
+      - app-server-3
+    namespace: test-vms
+  tasks:
     - name: Create VMs using Kubernetes module
       kubernetes.core.k8s:
         template:
-          path: 'vm-configuration.yaml.j2'
+          path: vm-configuration.yaml.j2
         state: present
       loop: "{{ vm_names }}"
-    
+
     - name: Expose VMs to the outside world using MetalLB
       kubernetes.core.k8s:
         template:
-          path: 'vm-fip-configuration-yaml.j2'
+          path: vm-fip-configuration-yaml.j2
         state: present
       loop: "{{ vm_names }}"
-    
+
     - name: Pause for 5 minutes to allow a proper VM creation
       pause:
         minutes: 12
-- name: Deploy httpd based VMs using IaC w/ Openshift Virtualization 
+- name: Deploy httpd based VMs using IaC w/ Openshift Virtualization
   remote_user: cloud-user
-  gather_facts: no
+  gather_facts: false
   serial: 1
-  become: yes 
+  become: true
   hosts: namespace_test-vms_services
   tasks:
-    - name: Verify that httpd package is installed 
+    - name: Verify that httpd package is installed
       package:
         name: httpd
-        state: present 
+        state: present
       check_mode: true
-    - name: Copy index.html template to default httpd directory 
-      template: 
+    - name: Copy index.html template to default httpd directory
+      template:
         src: index.html.j2
         dest: /var/www/html/index.html
-    - name: Retart httpd service to enable changes 
-      service: 
-        name: httpd 
+    - name: Retart httpd service to enable changes
+      service:
+        name: httpd
         state: restarted
