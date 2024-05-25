@@ -24,7 +24,7 @@
             namespace: "{{ namespace }}"
           data:
             userdata: "{{ deploy_collection_cloud_init_content | b64encode }}"
-    - name: "Create VirtualMachine"
+    - name: Create VirtualMachine
       kubernetes.core.k8s:
         state: present
         template: virtualmachine.yaml.j2
@@ -50,11 +50,11 @@
       retries: 60
       delay: 10
       until: (deploy_collection_vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
-    - name: "Create Service"
+    - name: Create Service
       kubernetes.core.k8s:
         state: present
         template: service.yaml.j2
-    - name: "Create Route"
+    - name: Create Route
       kubernetes.core.k8s:
         state: present
         template: route.yaml.j2
