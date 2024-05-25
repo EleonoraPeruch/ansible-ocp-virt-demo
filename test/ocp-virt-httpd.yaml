@@ -27,7 +27,7 @@
     - name: "Create VirtualMachine"
       kubernetes.core.k8s:
         state: present
-        template: virtualmachine.yml.j2
+        template: virtualmachine.yaml.j2
     - name: Wait for VM to be ready
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
@@ -53,8 +53,8 @@
     - name: "Create Service"
       kubernetes.core.k8s:
         state: present
-        template: service.yml.j2
+        template: service.yaml.j2
     - name: "Create Route"
       kubernetes.core.k8s:
         state: present
-        template: route.yml.j2
+        template: route.yaml.j2

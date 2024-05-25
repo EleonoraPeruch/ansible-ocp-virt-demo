@@ -2,9 +2,9 @@
 - name: "install centos vm with httpd configured"
   hosts: all
   vars_files:
-    - vars.yml
+    - vars.yaml
   tasks:
     - name: "Create Namespace {{ namespace }}"
       kubernetes.core.k8s:
         state: present
-        template: namespace.yml.j2
+        template: namespace.yaml.j2
