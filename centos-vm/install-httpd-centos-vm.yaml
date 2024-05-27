@@ -1,5 +1,5 @@
 ---
-- name: "install centos vm with httpd configured"
+- name: Install centos vm with httpd configured
   hosts: localhost
   gather_facts: false
   vars_files:
