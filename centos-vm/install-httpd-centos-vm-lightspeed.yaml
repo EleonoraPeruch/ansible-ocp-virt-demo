@@ -1,0 +1,95 @@
+---
+- name: Install centos vm with httpd configured
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Create Namespace using "{{ namespace }}" in vars.yaml
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ namespace }}"
+
+     
+    - name: Set cloud-init fact
+      ansible.builtin.set_fact:
+        deploy_collection_cloud_init_content: |
+          #cloud-config
+          user: cloud-user
+          password: admin
+          chpasswd:
+            expire: false
+          bootcmd:
+            - sudo yum install -y httpd
+            - sudo systemctl enable httpd
+            - sudo systemstl start httpd
+            - sudo echo "hello world" >> /var/www/html/index.html
+            - sudo systemctl restart httpd
+
+    - name: Create cloud-init Secret using "{{ cloud_init_secret }}", "{{ namespace }}", "{{ deploy_collection_cloud_init_content | b64encode }}" in vars.yaml
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ cloud_init_secret }}"
+            namespace: "{{ namespace }}"
+          type: Opaque
+          data:
+            cloud-init: "{{ deploy_collection_cloud_init_content | b64encode }}"
+
+     
+    - name: Create VirtualMachine using virtualmachine.yaml.j2
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'virtualmachine.yaml.j2') }}"
+
+
+    #- name: Create VirtualMachine using virtualmachine.yaml.j2 & Wait for VM to be ready and use api_version kubevirt.io/v1
+    # Content suggestion provided by Ansible Lightspeed
+    - name: Create virtualmachine using virtualmachine.yaml.j2
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'virtualmachine.yaml.j2') }}"
+
+    - name: Wait for vm to be ready and use api_version kubevirt.io/v1
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ _name_ }}"
+        namespace: "{{ _namespace_ }}"
+      register: vm_info
+      until: vm_info.resources[0].status.phase is defined and vm_info.resources[0].status.phase
+        == 'Running'
+      retries: 10
+      delay: 10
+
+    ## Further refine: Wait for VM to be ready and use api_version kubevirt.io/v1
+
+    - name: Wait for VM IP to be populated and use api_version kubevirt.io/v1
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ _name_ }}"
+        namespace: "{{ _namespace_ }}"
+      register: vm_info
+      until: vm_info.resources[0].status.addresses is defined
+      retries: 10
+      delay: 10
+
+    
+    - name: Create Service using service.yaml.j2
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'service.yaml.j2') }}"
+
+
+    - name: Create Route using route.yaml.j2
+      # Content suggestion provided by Ansible Lightspeed
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', 'route.yaml.j2') }}"
