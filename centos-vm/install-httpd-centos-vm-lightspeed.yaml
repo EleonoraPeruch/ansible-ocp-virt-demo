@@ -56,7 +56,7 @@
       kubernetes.core.k8s:
         definition: "{{ lookup('template', 'virtualmachine.yaml.j2') }}"
 
-    - name: Wait for vm to be ready and use api_version kubevirt.io/v1
+    - name: Wait for vm to be ready using api_version kubevirt.io/v1
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
