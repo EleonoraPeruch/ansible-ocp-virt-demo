@@ -53,8 +53,8 @@
       retries: 60
       delay: 10
       until:
-      - deploy_collection_vm.resources[0].status is defined
-      - deploy_collection_vm.resources[0].status.ready is true
+        - deploy_collection_vm.resources[0].status is defined
+        - deploy_collection_vm.resources[0].status.ready is true
 
     - name: Wait for VM IP to be populated
       kubernetes.core.k8s_info:
