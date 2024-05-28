@@ -1,17 +1,10 @@
 ---
 - name: Install centos vm with httpd configured
-  hosts: localhost
+  hosts: all
   gather_facts: false
   vars_files:
     - vars.yaml
   tasks:
-    - name: install pre-requisites
-      pip:
-        name:
-          - openshift
-          - pyyaml
-          - kubernetes 
-          
     - name: Create Namespace "{{ namespace }}"
       kubernetes.core.k8s:
         state: present
