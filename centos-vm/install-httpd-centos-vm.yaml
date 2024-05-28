@@ -5,6 +5,13 @@
   vars_files:
     - vars.yaml
   tasks:
+    - name: install pre-requisites
+      pip:
+        name:
+          - openshift
+          - pyyaml
+          - kubernetes 
+          
     - name: Create Namespace "{{ namespace }}"
       kubernetes.core.k8s:
         state: present
